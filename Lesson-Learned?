@@ -1,0 +1,66 @@
+# Lesson Learned? – TryHackMe Walkthrough
+
+## 📜 Room Description
+> This is a relatively easy machine that tries to teach you a lesson, but perhaps you've already learned the lesson? Let's find out.
+> 
+> Treat this box as if it were a real target and not a CTF. Get past the login screen and you will find the flag. There are no rabbit holes, no hidden files, just a login page and a flag. Good luck!
+
+---
+
+## 🧠 Initial Recon
+- Navigated to the target IP in a browser.
+- Found a login page with only **username** and **password** fields.
+- No obvious source code hints, hidden files, or additional endpoints.
+
+---
+
+## 🔍 Testing for SQL Injection
+1. Entered a test value with a single quote (`'`) into the **username** field:
+Result: Different error behavior → possible SQL injection point.
+
+2. Tried a typical **OR 1=1** payload:
+Result: **Trap triggered** — room “locks” the flag if you go for a broad bypass.
+
+---
+
+## 🎯 Targeted Approach
+Since `OR 1=1` triggered the “lesson,” I needed to:
+- Identify a valid username.
+- Use a boolean-based injection to target it specifically.
+
+### Step 1 — Username guessing
+Tested common short usernames that CTF makers love:
+
+admin
+administrator
+user
+guest
+test
+root
+martin
+patrick
+marcus
+stuart
+
+**Found valid username:** `martin`
+
+---
+
+### Step 2 — Boolean-based SQL Injection
+Injected: martin' AND '1'='1' -- - on the username field
+Password: anything
+
+Result: **Successful login** without triggering the OR trap.
+
+---
+
+## 🏆 Outcome
+- Accessed the flag directly after logging in.
+- Avoided the automated “lesson learned” block.
+
+---
+
+## 💡 Lessons Learned
+- Not all injections should be brute-forced with generic payloads.
+- Sometimes you need *precision* in your exploitation to avoid detection or traps.
+- Always treat CTF challenges as if they were real-world engagements.
