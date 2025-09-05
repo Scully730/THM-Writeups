@@ -1,0 +1,27 @@
+I was given a compiled binary named .Compiled. Running it prompted me for a password:
+
+Password: 
+
+Decompiling the binary with Ghidra showed this interesting line:
+
+__isoc99_scanf("DoYouEven%sCTF", local_28);
+
+and string comparisons against:
+
+__dso_handle
+_init
+
+At first glance, this suggested a password in the format DoYouEven_<something>CTF. I tried values like:
+
+DoYouEven_initCTF
+DoYouEven__dso_handleCTF
+
+…but they all failed with “Try again!”.
+
+🔑 The Trick
+
+After testing carefully, I realized the decompiler’s representation of scanf wasn’t entirely accurate. The program was really checking only for:
+
+DoYouEven_init
+
+Once I entered that, I got the “Correct!” response.
