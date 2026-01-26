@@ -1,0 +1,126 @@
+~/Downloads > echo "VEhNe2p1NTdfZDNjMGQzXzdoM19iNDUzfQ==" | base64 -d                            
+THM{ju57_d3c0d3_7h3_b453}%
+
+~/Downloads > exiftool meta.jpg                                      
+ExifTool Version Number         : 13.25
+File Name                       : meta.jpg
+Directory                       : .
+File Size                       : 35 kB
+File Modification Date/Time     : 2026:01:25 23:50:16-05:00
+File Access Date/Time           : 2026:01:25 23:50:16-05:00
+File Inode Change Date/Time     : 2026:01:25 23:50:23-05:00
+File Permissions                : -rw-rw-r--
+File Type                       : JPEG
+File Type Extension             : jpg
+MIME Type                       : image/jpeg
+JFIF Version                    : 1.01
+X Resolution                    : 96
+Y Resolution                    : 96
+Exif Byte Order                 : Big-endian (Motorola, MM)
+Resolution Unit                 : inches
+Y Cb Cr Positioning             : Centered
+Exif Version                    : 0231
+Components Configuration        : Y, Cb, Cr, -
+Flashpix Version                : 0100
+Owner Name                      : THM{3x1f_0r_3x17}
+Comment                         : CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), quality = 60.
+Image Width                     : 800
+Image Height                    : 480
+Encoding Process                : Progressive DCT, Huffman coding
+Bits Per Sample                 : 8
+Color Components                : 3
+Y Cb Cr Sub Sampling            : YCbCr4:2:0 (2 2)
+Image Size                      : 800x480
+Megapixels                      : 0.384
+
+~/Downloads > steghide extract -sf mon.jpg
+Enter passphrase: BLANK
+wrote extracted data to "Final_message.txt".
+
+~/Downloads > cat Final_message.txt                                                                                                                                                                                                 took 5s
+It going to be over soon. Sleep my child.
+
+THM{500n3r_0r_l473r_17_15_0ur_7urn}
+
+THM{wh173_fl46}
+
+~/Downloads > zbarimg qr.png                                                                                                                                                                                                    took 1m 11s
+QR-Code:THM{qr_m4k3_l1f3_345y}
+scanned 1 barcode symbols from 1 images in 0.02 seconds
+
+~/Downloads > strings hello.hello               
+/lib64/ld-linux-x86-64.so.2
+libc.so.6
+puts
+printf
+__cxa_finalize
+__libc_start_main
+GLIBC_2.2.5
+_ITM_deregisterTMCloneTable
+__gmon_start__
+_ITM_registerTMCloneTable
+u/UH
+[]A\A]A^A_
+THM{345y_f1nd_345y_60}
+Hello there, wish you have a nice day
+;*3$"
+GCC: (Debian 9.2.1-21) 9.2.1 20191130
+crtstuff.c
+deregister_tm_clones
+__do_global_dtors_aux
+completed.7447
+__do_global_dtors_aux_fini_array_entry
+frame_dummy
+__frame_dummy_init_array_entry
+hello.c
+__FRAME_END__
+__init_array_end
+_DYNAMIC
+__init_array_start
+__GNU_EH_FRAME_HDR
+_GLOBAL_OFFSET_TABLE_
+__libc_csu_fini
+skip
+_ITM_deregisterTMCloneTable
+puts@@GLIBC_2.2.5
+_edata
+printf@@GLIBC_2.2.5
+__libc_start_main@@GLIBC_2.2.5
+__data_start
+__gmon_start__
+__dso_handle
+_IO_stdin_used
+__libc_csu_init
+__bss_start
+main
+__TMC_END__
+_ITM_registerTMCloneTable
+__cxa_finalize@@GLIBC_2.2.5
+.symtab
+.strtab
+.shstrtab
+.interp
+.note.gnu.build-id
+.note.ABI-tag
+.gnu.hash
+.dynsym
+.dynstr
+.gnu.version
+.gnu.version_r
+.rela.dyn
+.rela.plt
+.init
+.plt.got
+.text
+.fini
+.rodata
+.eh_frame_hdr
+.eh_frame
+.init_array
+.fini_array
+.dynamic
+.got.plt
+.data
+.bss
+.comment
+
