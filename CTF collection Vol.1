@@ -1,6 +1,8 @@
+Task 1
 ~/Downloads > echo "VEhNe2p1NTdfZDNjMGQzXzdoM19iNDUzfQ==" | base64 -d                            
 THM{ju57_d3c0d3_7h3_b453}%
 
+Task 2
 ~/Downloads > exiftool meta.jpg                                      
 ExifTool Version Number         : 13.25
 File Name                       : meta.jpg
@@ -33,6 +35,7 @@ Y Cb Cr Sub Sampling            : YCbCr4:2:0 (2 2)
 Image Size                      : 800x480
 Megapixels                      : 0.384
 
+Task 3
 ~/Downloads > steghide extract -sf mon.jpg
 Enter passphrase: BLANK
 wrote extracted data to "Final_message.txt".
@@ -42,12 +45,15 @@ It going to be over soon. Sleep my child.
 
 THM{500n3r_0r_l473r_17_15_0ur_7urn}
 
+Task 4
 THM{wh173_fl46}
 
+Task 5
 ~/Downloads > zbarimg qr.png                                                                                                                                                                                                    took 1m 11s
 QR-Code:THM{qr_m4k3_l1f3_345y}
 scanned 1 barcode symbols from 1 images in 0.02 seconds
 
+Task 6
 ~/Downloads > strings hello.hello               
 /lib64/ld-linux-x86-64.so.2
 libc.so.6
@@ -124,21 +130,28 @@ __cxa_finalize@@GLIBC_2.2.5
 .bss
 .comment
 
+Task 7
+After researching about the type of sring, we find out that it is a base58.
 ~/Downloads > echo "3agrSy1CewF9v8ukcSkPSYm3oKUoByUpKG4L" | base58 -d
 THM{17_h45_l3553r_l3773r5}
 
+Task 8
 ROT13 Bruteforcer on CyberChef
 THM{hail_the_caesar}
 
+Task 9
 Checking the HTML section of the task, we find a comment that gives us the flag
 THM{4lw4y5_ch3ck_7h3_c0m3mn7}
 
+Task 10
 https://www.reddit.com/r/tryhackme/comments/eizxaq/new_room_coming_soon/
 THM{50c14l_4cc0un7_15_p4r7_0f_051n7}
 
+Task 11
 Using the XOR Bruteforce option on CyberChef, we get the flag
 THM{3xclu51v3_0r}
 
+Task 12
 ~/Downloads > binwalk -e hell.jpg
 
 DECIMAL       HEXADECIMAL     DESCRIPTION
@@ -149,13 +162,36 @@ WARNING: One or more files failed to extract: either no utility was found or it'
 
 ~/Downloads > cd _hell.jpg.extracted           
 
-~/Downloads/_hell.jpg.extracted > ls   
-40E75.zip  hello_there.txt
-
 ~/Downloads/_hell.jpg.extracted > cat hello_there.txt                 
 Thank you for extracting me, you are the best!
 
 THM{y0u_w4lk_m3_0u7}
 
+Task 13
+Using Stegsolve to read out the flag
 ~/Downloads > java -jar ~/bin/stegsolve.jar
 THM{7h3r3_15_h0p3_1n_7h3_d4rkn355}
+
+Task 14
+~/Downloads > zbarimg qr2.png                                                                                                                                                                              
+QR-Code:https://soundcloud.com/user-86667759/thm-ctf-vol1
+scanned 1 barcode symbols from 1 images in 0 seconds
+
+We navigate to the attached link and we listen to the flag:
+THM{SOUNDINGQR}
+
+Task 14
+We head over to wayback machine website and we search with the link given, we then select the date we are interested in, which is Jan 2nd, 2020.
+THM{ch3ck_th3_h4ckb4ck}
+
+Task 15
+After researching about Vigenere Cipher, we learn that it uses multiple substitution alphabets creating a strong code. We head over to CyberChef straight and we import the Vigenere Decode option, firstly i try TRYHACKME as the key and I notice a repeated keyword on the answer which is THM. I use that as the and it gives the the correct flag.
+TRYHACKME{YOU_FOUND_THE_KEY}
+
+Task 16
+Using the hint provided as i was going around in circles, we need to convert the string from Dec > Hex > ASCII. We use RapidTable for that and we get the flag.
+THM{17_ju57_4n_0rd1n4ry_b4535}
+
+Task 17
+Opening the PCAP file in Wireshark, we then filter by HTTP. Looking at the requests, we notice an interesting one which is GET /flag.txt HTTP1/1.
+THM{d0_n07_574lk_m3}
