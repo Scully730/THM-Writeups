@@ -124,3 +124,38 @@ __cxa_finalize@@GLIBC_2.2.5
 .bss
 .comment
 
+~/Downloads > echo "3agrSy1CewF9v8ukcSkPSYm3oKUoByUpKG4L" | base58 -d
+THM{17_h45_l3553r_l3773r5}
+
+ROT13 Bruteforcer on CyberChef
+THM{hail_the_caesar}
+
+Checking the HTML section of the task, we find a comment that gives us the flag
+THM{4lw4y5_ch3ck_7h3_c0m3mn7}
+
+https://www.reddit.com/r/tryhackme/comments/eizxaq/new_room_coming_soon/
+THM{50c14l_4cc0un7_15_p4r7_0f_051n7}
+
+Using the XOR Bruteforce option on CyberChef, we get the flag
+THM{3xclu51v3_0r}
+
+~/Downloads > binwalk -e hell.jpg
+
+DECIMAL       HEXADECIMAL     DESCRIPTION
+--------------------------------------------------------------------------------
+265845        0x40E75         Zip archive data, at least v2.0 to extract, uncompressed size: 69, name: hello_there.txt
+
+WARNING: One or more files failed to extract: either no utility was found or it's unimplemented
+
+~/Downloads > cd _hell.jpg.extracted           
+
+~/Downloads/_hell.jpg.extracted > ls   
+40E75.zip  hello_there.txt
+
+~/Downloads/_hell.jpg.extracted > cat hello_there.txt                 
+Thank you for extracting me, you are the best!
+
+THM{y0u_w4lk_m3_0u7}
+
+~/Downloads > java -jar ~/bin/stegsolve.jar
+THM{7h3r3_15_h0p3_1n_7h3_d4rkn355}
